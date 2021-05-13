@@ -81,7 +81,7 @@ for i in range(len(used)):
         language_histogram.items(), key=lambda kv: kv[1], reverse=True)
     datapoints = 0
     output_file.write(
-        f'Number of Articles:, {valid_articles}, Number of Words Processed:,{num_processed_words}')
+        f'Number of Articles:, {valid_articles}, Number of Words Processed:,{num_processed_words}\n')
     for datum in ordered_histogram:
         output_file.write(f'{datum[0]},{datum[1]}\n')
     output_file.close()
