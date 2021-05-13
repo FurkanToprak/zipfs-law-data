@@ -5,8 +5,9 @@ from string import punctuation
 from progress.bar import Bar
 
 NUMBER_OF_ARTICLES = 30
+DATA_DIRECTORY = './histograms'
 
-removePunctuation = str.maketrans('', '', punctuation)
+REMOVE_PUNCTUATION = str.maketrans('', '', punctuation)
 
 wikipedia_languages = wikipedia.languages()
 
@@ -36,8 +37,8 @@ all_languages_bar = Bar('Languages:', max=len(used))
 for i in range(len(used)):
     language = used[i]
     long_language = long_used_name[i]
-    language_bar = Bar(
-        f'Processing for {long_language}:', max=NUMBER_OF_ARTICLES)
+    # language_bar = Bar(
+    #     f'Processing for {long_language}:', max=NUMBER_OF_ARTICLES)
     wikipedia.set_lang(language)
     valid_articles = 0
     num_processed_words = 0
@@ -45,7 +46,7 @@ for i in range(len(used)):
     for i in range(0, NUMBER_OF_ARTICLES // 10):
         random_articles = wikipedia.random(pages=10)
         for random_article in random_articles:
-            language_bar.next()
+            # language_bar.next()
             try:
                 try:
                     wiki_page_obj = wikipedia.page(title=random_article)
@@ -63,9 +64,12 @@ for i in range(len(used)):
                 wiki_page_content = wiki_page_obj.content
                 # stripped and case-insensitive
                 preprocessed_wiki_page_words = wiki_page_content.translate(
-                    removePunctuation).lower().split()
+                    REMOVE_PUNCTUATION).lower().split()
                 # print(preprocessed_wiki_page_words)
                 for preprocessed_wiki_page_word in preprocessed_wiki_page_words:
+                    contains_numbers = any(chr.isdigit() for chr in preprocessed_wiki_page_word)
+                    if contains_numbers:
+                        continue
                     num_processed_words += 1
                     if preprocessed_wiki_page_word in language_histogram:
                         language_histogram[preprocessed_wiki_page_word] += 1
@@ -75,7 +79,7 @@ for i in range(len(used)):
             except wikipedia.exceptions.PageError as no_such_random_page_error:
                 pass
 
-    output_file = open(f'word-freq-{language}-{long_language}.csv', 'w')
+    output_file = open(f'{DATA_DIRECTORY}/word-freq-{language}-{long_language}.csv', 'w')
     # sort words by prevelance
     ordered_histogram = sorted(
         language_histogram.items(), key=lambda kv: kv[1], reverse=True)
