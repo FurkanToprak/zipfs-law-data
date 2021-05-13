@@ -36,9 +36,11 @@ all_languages_bar = Bar('Languages:', max=len(used))
 for i in range(len(used)):
     language = used[i]
     long_language = long_used_name[i]
-    language_bar = Bar(f'Processing for {long_language}:', max=NUMBER_OF_ARTICLES)
+    language_bar = Bar(
+        f'Processing for {long_language}:', max=NUMBER_OF_ARTICLES)
     wikipedia.set_lang(language)
-    # article_samples = []
+    valid_articles = 0
+    num_processed_words = 0
     language_histogram = dict()
     for i in range(0, NUMBER_OF_ARTICLES // 10):
         random_articles = wikipedia.random(pages=10)
@@ -64,11 +66,12 @@ for i in range(len(used)):
                     removePunctuation).lower().split()
                 # print(preprocessed_wiki_page_words)
                 for preprocessed_wiki_page_word in preprocessed_wiki_page_words:
+                    num_processed_words += 1
                     if preprocessed_wiki_page_word in language_histogram:
                         language_histogram[preprocessed_wiki_page_word] += 1
                     else:
                         language_histogram[preprocessed_wiki_page_word] = 1
-
+                valid_articles += 1
             except wikipedia.exceptions.PageError as no_such_random_page_error:
                 pass
 
@@ -77,6 +80,8 @@ for i in range(len(used)):
     ordered_histogram = sorted(
         language_histogram.items(), key=lambda kv: kv[1], reverse=True)
     datapoints = 0
+    output_file.write(
+        f'Number of Articles:, {valid_articles}, Number of Words Processed:,{num_processed_words}')
     for datum in ordered_histogram:
         output_file.write(f'{datum[0]},{datum[1]}\n')
     output_file.close()
