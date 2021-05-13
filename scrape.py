@@ -10,15 +10,10 @@ NUMBER_OF_ARTICLES = 10000
 
 removePunctuation = str.maketrans('', '', punctuation)
 
-language_list_file = open("identifiable_languages_list.txt", "r")
-language_list = language_list_file.read().split()
-# print(language_list)
 wikipedia_languages = wikipedia.languages()
 
 long_used_name = []
 used = []
-long_not_used_name = []
-not_used = []
 no_translation = []
 
 for wikipedia_language in wikipedia_languages:
@@ -27,12 +22,8 @@ for wikipedia_language in wikipedia_languages:
         no_translation.append(wikipedia_language)
     else:
         long_language_name = language_obj.name
-        if wikipedia_language in language_list:
-            long_used_name.append(long_language_name)
-            used.append(wikipedia_language)
-        else:
-            long_not_used_name.append(long_language_name)
-            not_used.append(wikipedia_language)
+        long_used_name.append(long_language_name)
+        used.append(wikipedia_language)
 
 # print("------")
 # print("USED:", len(used))
@@ -80,7 +71,7 @@ for i in range(min(1, len(used))):
 
             except wikipedia.exceptions.PageError as no_such_random_page_error:
                 pass
-    
+
     output_file = open(f'word-freq-{wikipedia_language}.csv', 'w')
     # sort words by prevelance
     ordered_histogram = sorted(
