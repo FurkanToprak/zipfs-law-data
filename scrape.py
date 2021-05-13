@@ -1,12 +1,10 @@
 import wikipedia
 from pycountry import languages
 import random
-from collections import Counter
-from itertools import chain
 from string import punctuation
-import operator
+from progress.bar import Bar
 
-NUMBER_OF_ARTICLES = 10000
+NUMBER_OF_ARTICLES = 30
 
 removePunctuation = str.maketrans('', '', punctuation)
 
@@ -34,16 +32,18 @@ for wikipedia_language in wikipedia_languages:
 # print(not_used)
 # print("NO TRANSLATION:", len(no_translation))
 # print(no_translation)
-
-for i in range(min(1, len(used))):
+all_languages_bar = Bar('Languages:', max=len(used))
+for i in range(len(used)):
     language = used[i]
     long_language = long_used_name[i]
+    language_bar = Bar(f'Processing for {long_language}:', max=NUMBER_OF_ARTICLES)
     wikipedia.set_lang(language)
     # article_samples = []
     language_histogram = dict()
     for i in range(0, NUMBER_OF_ARTICLES // 10):
         random_articles = wikipedia.random(pages=10)
         for random_article in random_articles:
+            language_bar.next()
             try:
                 try:
                     wiki_page_obj = wikipedia.page(title=random_article)
@@ -72,7 +72,7 @@ for i in range(min(1, len(used))):
             except wikipedia.exceptions.PageError as no_such_random_page_error:
                 pass
 
-    output_file = open(f'word-freq-{wikipedia_language}.csv', 'w')
+    output_file = open(f'word-freq-{language}-{long_language}.csv', 'w')
     # sort words by prevelance
     ordered_histogram = sorted(
         language_histogram.items(), key=lambda kv: kv[1], reverse=True)
@@ -80,4 +80,4 @@ for i in range(min(1, len(used))):
     for datum in ordered_histogram:
         output_file.write(f'{datum[0]},{datum[1]}\n')
     output_file.close()
-    print("Done with ", long_language)
+    all_languages_bar.next()
