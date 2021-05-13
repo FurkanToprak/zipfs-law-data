@@ -1,7 +1,14 @@
 import wikipedia
 from pycountry import languages
+import random
+from collections import Counter
+from itertools import chain
+from string import punctuation
+import operator
 
-NUMBER_OF_ARTICLES = 20
+NUMBER_OF_ARTICLES = 10000
+
+removePunctuation = str.maketrans('', '', punctuation)
 
 language_list_file = open("identifiable_languages_list.txt", "r")
 language_list = language_list_file.read().split()
@@ -37,15 +44,49 @@ for wikipedia_language in wikipedia_languages:
 # print("NO TRANSLATION:", len(no_translation))
 # print(no_translation)
 
-for i in range(len(used)):
+for i in range(min(1, len(used))):
     language = used[i]
     long_language = long_used_name[i]
     wikipedia.set_lang(language)
     # article_samples = []
+    language_histogram = dict()
     for i in range(0, NUMBER_OF_ARTICLES // 10):
         random_articles = wikipedia.random(pages=10)
         for random_article in random_articles:
-            # article_samples.append(random_article)
-            wiki_page_obj = wikipedia.page(title=random_article)
+            try:
+                try:
+                    wiki_page_obj = wikipedia.page(title=random_article)
+                # Wikipedia isn't sure what the title is referring to
+                except wikipedia.DisambiguationError as amb_err:
+                    continue
+                    # random_page = random.choice(amb_err.options)
+                    # # print(amb_err.options)
+                    # try:
+                    #     wiki_page_obj = wikipedia.page(title=random_page)
+                    # # sometimes there is no fix to ambiguity
+                    # except wikipedia.DisambiguationError as amb_err_2:
+                    #     continue # if no fix, skip
+
+                wiki_page_content = wiki_page_obj.content
+                # stripped and case-insensitive
+                preprocessed_wiki_page_words = wiki_page_content.translate(
+                    removePunctuation).lower().split()
+                # print(preprocessed_wiki_page_words)
+                for preprocessed_wiki_page_word in preprocessed_wiki_page_words:
+                    if preprocessed_wiki_page_word in language_histogram:
+                        language_histogram[preprocessed_wiki_page_word] += 1
+                    else:
+                        language_histogram[preprocessed_wiki_page_word] = 1
+
+            except wikipedia.exceptions.PageError as no_such_random_page_error:
+                pass
     
-    print(long_language, article_samples)
+    output_file = open(f'word-freq-{wikipedia_language}.csv', 'w')
+    # sort words by prevelance
+    ordered_histogram = sorted(
+        language_histogram.items(), key=lambda kv: kv[1], reverse=True)
+    datapoints = 0
+    for datum in ordered_histogram:
+        output_file.write(f'{datum[0]},{datum[1]}\n')
+    output_file.close()
+    print("Done with ", long_language)
